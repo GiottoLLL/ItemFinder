@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "temp",
-    "slug": "temp",
+    "name": "物归处",
+    "slug": "itemfinder",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
