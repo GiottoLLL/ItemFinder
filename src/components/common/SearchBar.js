@@ -1,18 +1,26 @@
 import { Feather } from '@expo/vector-icons'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, TextInput, View } from 'react-native'
 
 import { colors, radius, shadows, spacing } from '../../styles/theme'
 
 export default function SearchBar({
   placeholder,
   variant = 'outlined',
+  value,
+  onChangeText,
   onVoicePress,
   onScanPress
 }) {
   return (
     <View style={styles.row}>
       <View style={[styles.inputShell, variant === 'filled' && styles.inputShellFilled]}>
-        <Text style={styles.placeholder}>{placeholder}</Text>
+        <TextInput
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.inputPlaceholder}
+          style={styles.input}
+          value={value}
+        />
       </View>
       <Pressable onPress={onVoicePress} style={styles.iconButton}>
         <Feather color={colors.woodPrimary} name='mic' size={18} />
@@ -44,10 +52,11 @@ const styles = StyleSheet.create({
   inputShellFilled: {
     borderWidth: 1
   },
-  placeholder: {
-    color: colors.inputPlaceholder,
+  input: {
+    color: colors.woodPrimary,
     fontSize: 18,
-    fontWeight: '500'
+    fontWeight: '500',
+    padding: 0
   },
   iconButton: {
     alignItems: 'center',

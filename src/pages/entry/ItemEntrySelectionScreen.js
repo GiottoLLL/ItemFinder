@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native'
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
 
 import EntryOptionCard from '../../components/common/EntryOptionCard'
 import PageContainer from '../../components/layout/PageContainer'
@@ -6,6 +7,8 @@ import TopNavBar from '../../components/layout/TopNavBar'
 import { colors, radius, spacing } from '../../styles/theme'
 
 export default function ItemEntrySelectionScreen() {
+  const navigation = useNavigation()
+
   return (
     <PageContainer backgroundColor={colors.pageBackground}>
       <TopNavBar />
@@ -22,13 +25,14 @@ export default function ItemEntrySelectionScreen() {
             description='智能识别物品特征'
             featured
             iconName='camera'
+            onPress={() => navigation.navigate('ItemEntryForm')}
             title='拍照录入'
           />
         </View>
 
         <View style={styles.gridRow}>
-          <EntryOptionCard iconName='maximize' title='扫码识别' />
-          <EntryOptionCard iconName='file-text' title='票据导入' />
+          <EntryOptionCard iconName='maximize' onPress={() => navigation.navigate('ItemEntryForm')} title='扫码识别' />
+          <EntryOptionCard iconName='file-text' onPress={() => navigation.navigate('ItemEntryForm')} title='票据导入' />
         </View>
 
         <View style={styles.dividerRow}>
@@ -49,9 +53,9 @@ export default function ItemEntrySelectionScreen() {
           </View>
         </View>
 
-        <View style={styles.submitButton}>
+        <Pressable onPress={() => navigation.navigate('ItemEntryForm')} style={styles.submitButton}>
           <Text style={styles.submitButtonText}>继续录入</Text>
-        </View>
+        </Pressable>
       </View>
     </PageContainer>
   )

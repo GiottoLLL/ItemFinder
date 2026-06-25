@@ -1,47 +1,69 @@
 import { useEffect, useState } from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
 
 import FilterChip from '../../components/common/FilterChip'
 import InventoryCard from '../../components/common/InventoryCard'
 import SearchBar from '../../components/common/SearchBar'
 import PageContainer from '../../components/layout/PageContainer'
 import TopNavBar from '../../components/layout/TopNavBar'
-import { fetchInventoryCards } from '../../services'
+import { fetchInventoryCards, fetchStorageSpaces } from '../../services'
 import { colors, spacing } from '../../styles/theme'
 
-const filterList = ['全部', '客厅', '厨房', '书房', '卧室']
-
 export default function InventoryListScreen() {
+  const navigation = useNavigation()
   const [inventoryList, setInventoryList] = useState([])
+  const [keyword, setKeyword] = useState('')
+  const [spaceList, setSpaceList] = useState([])
+  const [activeSpaceId, setActiveSpaceId] = useState(null)
 
   useEffect(() => {
-    fetchInventoryCards().then(setInventoryList)
+    fetchStorageSpaces().then(list => {
+      setSpaceList(list)
+      return list
+    })
   }, [])
+
+  useEffect(() => {
+    fetchInventoryCards({ keyword, storageSpaceId: activeSpaceId }).then(setInventoryList)
+  }, [keyword, activeSpaceId])
 
   return (
     <PageContainer backgroundColor={colors.listPageBackground}>
       <TopNavBar />
       <View style={styles.main}>
-        <SearchBar placeholder='问AI，找物品' variant='filled' />
+        <SearchBar
+          onChangeText={setKeyword}
+          placeholder='输入关键词搜索'
+          value={keyword}
+          variant='filled'
+        />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.filterScroll}
         >
           <View style={styles.filterWrap}>
-            {filterList.map((filterName, index) => (
-              <FilterChip active={index === 0} key={filterName} label={filterName} />
+            <FilterChip active={!activeSpaceId} key='all' label='全部' onPress={() => setActiveSpaceId(null)} />
+            {spaceList.map(space => (
+              <FilterChip
+                active={String(activeSpaceId) === String(space.id)}
+                key={space.id}
+                label={space.name}
+                onPress={() => setActiveSpaceId(space.id)}
+              />
             ))}
           </View>
         </ScrollView>
         <View style={styles.listWrap}>
           {inventoryList.map(item => (
-            <InventoryCard
-              itemName={item.name}
-              key={item.id}
-              percent={item.percent}
-              storageSpaceName={item.storageSpaceName}
-            />
+            <Pressable key={item.id} onPress={() => navigation.navigate('ItemDetail', { itemId: item.id })}>
+              <InventoryCard
+                itemName={item.name}
+                percent={item.percent}
+                storageSpaceName={item.storageSpaceName}
+              />
+            </Pressable>
           ))}
         </View>
       </View>

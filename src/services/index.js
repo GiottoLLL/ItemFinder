@@ -1,52 +1,99 @@
 import { createPromiseTask } from '../utils'
+import {
+  addItem,
+  addStorageSpace,
+  getItemDetail,
+  getInventoryList,
+  getInventoryWarnings,
+  getStorageSpaceList,
+  initializeDatabase,
+  muteWarningForItem
+} from './db/database'
 
-const mockDelay = callback =>
-  createPromiseTask(
-    () =>
-      new Promise(resolve => {
-        setTimeout(() => {
-          resolve(callback())
-        }, 120)
-      })
+export function initializeAppDatabase() {
+  return initializeDatabase()
+}
+
+export function fetchStorageSpaces() {
+  return createPromiseTask(() => getStorageSpaceList())
+}
+
+export function createStorageSpace(spaceName) {
+  return createPromiseTask(() => addStorageSpace(spaceName))
+}
+
+export function createItem(payload) {
+  return createPromiseTask(() => addItem(payload))
+}
+
+export function fetchInventoryList(options = {}) {
+  return createPromiseTask(() => getInventoryList(options))
+}
+
+export function fetchItemDetail(itemId) {
+  return createPromiseTask(() => getItemDetail(itemId))
+}
+
+export function fetchInventoryCards(options = {}) {
+  return fetchInventoryList(options).then(list =>
+    list.map(item => {
+      const percent = Math.max(0, Math.min(100, Math.round((Number(item.quantity) / 6) * 100)))
+      return {
+        id: item.id,
+        name: item.name,
+        percent,
+        storageSpaceName: item.storageSpaceName
+      }
+    })
   )
+}
 
 export function fetchHomeStatistics() {
-  return mockDelay(() => ({
-    totalCount: 50,
-    mostUsedItemName: '纸巾',
-    distributionList: [
-      { id: 'living-room', name: '客厅', percentage: 40 },
-      { id: 'bedroom', name: '卧室', percentage: 35 },
-      { id: 'kitchen', name: '厨房', percentage: 25 }
-    ]
-  }))
+  return Promise.all([fetchInventoryList(), fetchStorageSpaces()]).then(([items, spaces]) => {
+    const totalCount = items.length
+    const mostUsedItemName = items[0]?.name || '--'
+
+    const spaceCountMap = items.reduce((acc, item) => {
+      const key = String(item.storageSpaceId)
+      return { ...acc, [key]: (acc[key] || 0) + 1 }
+    }, {})
+
+    const distributionList = spaces
+      .map(space => {
+        const count = spaceCountMap[String(space.id)] || 0
+        return { id: space.id, name: space.name, count }
+      })
+      .filter(item => item.count > 0)
+
+    const totalInDistribution = distributionList.reduce((sum, item) => sum + item.count, 0) || 1
+
+    return {
+      totalCount,
+      mostUsedItemName,
+      distributionList: distributionList.map(item => ({
+        id: item.id,
+        name: item.name,
+        percentage: Math.round((item.count / totalInDistribution) * 100)
+      }))
+    }
+  })
+}
+
+export function fetchInventoryWarnings() {
+  return createPromiseTask(() => getInventoryWarnings())
+}
+
+export function muteWarnings(itemIdList = []) {
+  return itemIdList.reduce((promiseChain, itemId) => {
+    return promiseChain.then(() => muteWarningForItem(itemId))
+  }, Promise.resolve())
 }
 
 export function fetchSearchSuggestions() {
-  return mockDelay(() => ({
-    aiCards: [
-      {
-        id: 'location-card',
-        type: 'location',
-        title: '寻找的物品：黑色笔记本',
-        description: '在书房抽屉第二层'
-      },
-      {
-        id: 'stock-card',
-        type: 'stock',
-        title: '物品库存',
-        description: '洗衣液还剩 2 瓶，建议补货量 3 瓶'
-      }
-    ],
-    historyKeywords: ['充电线', '酱油瓶', '护照']
-  }))
-}
-
-export function fetchInventoryCards() {
-  return mockDelay(() => [
-    { id: 'coffee', name: '咖啡豆', percent: 65, storageSpaceName: '客厅边柜' },
-    { id: 'tissue', name: '抽纸', percent: 20, storageSpaceName: '客厅电视柜' },
-    { id: 'soap', name: '洗洁精', percent: 90, storageSpaceName: '厨房水槽下方' },
-    { id: 'cream', name: '护手霜', percent: 45, storageSpaceName: '卧室床头柜' }
-  ])
+  return createPromiseTask(() =>
+    Promise.resolve({
+      aiCards: [],
+      historyKeywords: []
+    })
+  )
 }

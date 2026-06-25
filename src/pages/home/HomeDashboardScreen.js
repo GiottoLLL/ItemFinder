@@ -1,26 +1,45 @@
 import { useEffect, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
 
 import StatCard from '../../components/common/StatCard'
+import InventoryWarningModal from '../../components/common/InventoryWarningModal'
 import PageContainer from '../../components/layout/PageContainer'
 import TopNavBar from '../../components/layout/TopNavBar'
-import { fetchHomeStatistics } from '../../services'
+import { fetchHomeStatistics, fetchInventoryWarnings, muteWarnings } from '../../services'
 import { colors, radius, spacing } from '../../styles/theme'
 
 export default function HomeDashboardScreen() {
+  const navigation = useNavigation()
   const [statistics, setStatistics] = useState({
     totalCount: 0,
     mostUsedItemName: '--',
     distributionList: []
   })
+  const [warningVisible, setWarningVisible] = useState(false)
+  const [warningDismissed, setWarningDismissed] = useState(false)
+  const [warningList, setWarningList] = useState([])
 
   useEffect(() => {
     fetchHomeStatistics().then(setStatistics)
   }, [])
 
+  useEffect(() => {
+    fetchInventoryWarnings().then(list => {
+      setWarningList(list)
+      if (!warningDismissed && list.length > 0) {
+        setWarningVisible(true)
+      }
+    })
+  }, [warningDismissed])
+
   return (
-    <PageContainer backgroundColor={colors.pageBackground}>
-      <TopNavBar />
+    <View style={styles.root}>
+      <PageContainer backgroundColor={colors.pageBackground}>
+      <TopNavBar
+        onPressRight={() => navigation.navigate('StorageSpaceList')}
+        rightIconName='grid'
+      />
       <View style={styles.main}>
         <View style={styles.hero}>
           <Text style={styles.pageTitle}>我的物品</Text>
@@ -52,11 +71,30 @@ export default function HomeDashboardScreen() {
           ))}
         </View>
       </View>
-    </PageContainer>
+      </PageContainer>
+      <InventoryWarningModal
+        onMuteAll={() => {
+          muteWarnings(warningList.map(item => item.id))
+            .then(() => fetchInventoryWarnings())
+            .then(list => setWarningList(list))
+            .then(() => setWarningVisible(false))
+            .then(() => setWarningDismissed(true))
+        }}
+        onRequestClose={() => {
+          setWarningVisible(false)
+          setWarningDismissed(true)
+        }}
+        visible={warningVisible}
+        warningList={warningList}
+      />
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1
+  },
   main: {
     gap: spacing.xxl,
     paddingBottom: 55,

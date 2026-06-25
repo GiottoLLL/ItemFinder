@@ -1,29 +1,28 @@
 import { NavigationContainer } from '@react-navigation/native'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
-import BottomTabBar from '../components/layout/BottomTabBar'
-import ItemEntrySelectionScreen from '../pages/entry/ItemEntrySelectionScreen'
-import HomeDashboardScreen from '../pages/home/HomeDashboardScreen'
-import InventoryListScreen from '../pages/inventory/InventoryListScreen'
-import ItemSearchScreen from '../pages/search/ItemSearchScreen'
+import MainTabs from './MainTabs'
+import ItemEntryFormScreen from '../pages/entry/ItemEntryFormScreen'
+import ItemDetailScreen from '../pages/inventory/ItemDetailScreen'
+import StorageSpaceListScreen from '../pages/storage/StorageSpaceListScreen'
+import AuthLoginScreen from '../pages/auth/AuthLoginScreen'
 
-const Tab = createBottomTabNavigator()
+const Stack = createNativeStackNavigator()
 
 export default function RootNavigator() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        initialRouteName='HomeDashboard'
+      <Stack.Navigator
         screenOptions={{
           headerShown: false
         }}
-        tabBar={props => <BottomTabBar {...props} />}
       >
-        <Tab.Screen component={HomeDashboardScreen} name='HomeDashboard' />
-        <Tab.Screen component={ItemEntrySelectionScreen} name='ItemEntrySelection' />
-        <Tab.Screen component={ItemSearchScreen} name='ItemSearch' />
-        <Tab.Screen component={InventoryListScreen} name='InventoryList' />
-      </Tab.Navigator>
+        <Stack.Screen component={MainTabs} name='MainTabs' />
+        <Stack.Screen component={ItemEntryFormScreen} name='ItemEntryForm' />
+        <Stack.Screen component={ItemDetailScreen} name='ItemDetail' />
+        <Stack.Screen component={StorageSpaceListScreen} name='StorageSpaceList' />
+        <Stack.Screen component={AuthLoginScreen} name='AuthLogin' />
+      </Stack.Navigator>
     </NavigationContainer>
   )
 }

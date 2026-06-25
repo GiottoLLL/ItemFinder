@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Feather } from '@expo/vector-icons'
 import { StyleSheet, Text, View } from 'react-native'
 
 import FilterChip from '../../components/common/FilterChip'
 import SearchBar from '../../components/common/SearchBar'
+import SearchEmptyState from '../../components/common/SearchEmptyState'
 import PageContainer from '../../components/layout/PageContainer'
 import TopNavBar from '../../components/layout/TopNavBar'
-import { fetchSearchSuggestions } from '../../services'
+import { fetchInventoryList, fetchSearchSuggestions } from '../../services'
 import { colors, radius, shadows, spacing } from '../../styles/theme'
 
 export default function ItemSearchScreen() {
@@ -14,38 +14,50 @@ export default function ItemSearchScreen() {
     aiCards: [],
     historyKeywords: []
   })
+  const [keyword, setKeyword] = useState('')
+  const [resultList, setResultList] = useState([])
 
   useEffect(() => {
     fetchSearchSuggestions().then(setSearchData)
   }, [])
 
+  useEffect(() => {
+    if (!keyword) {
+      setResultList([])
+      return
+    }
+    fetchInventoryList({ keyword }).then(setResultList)
+  }, [keyword])
+
   return (
     <PageContainer backgroundColor={colors.pageBackground}>
       <TopNavBar />
       <View style={styles.main}>
-        <SearchBar placeholder='问AI，找物品' />
+        <SearchBar
+          onChangeText={setKeyword}
+          placeholder='输入关键词查找'
+          value={keyword}
+        />
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Feather color={colors.textMuted} name='sparkles' size={18} />
-            <Text style={styles.sectionTitle}>AI 智能回复</Text>
-          </View>
+        {!!keyword && resultList.length === 0 && (
+          <SearchEmptyState />
+        )}
 
-          {searchData.aiCards.map(card => (
-            <View key={card.id} style={styles.aiCard}>
-              <View style={styles.aiBadge} />
-              <View style={styles.aiCardContent}>
-                <Text style={styles.aiCardTitle}>{card.title}</Text>
-                <Text style={styles.aiCardDescription}>{card.description}</Text>
+        {!!keyword && resultList.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>搜索结果</Text>
+            {resultList.map(item => (
+              <View key={item.id} style={styles.aiCard}>
+                <Text style={styles.aiCardTitle}>{item.name}</Text>
+                <Text style={styles.aiCardDescription}>{item.storageSpaceName}</Text>
               </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.section}>
           <View style={styles.historyHeader}>
             <Text style={styles.historyTitle}>搜索记录</Text>
-            <Feather color={colors.textMuted} name='clock' size={16} />
           </View>
           <View style={styles.historyWrap}>
             {searchData.historyKeywords.map(keyword => (
@@ -67,11 +79,6 @@ const styles = StyleSheet.create({
   section: {
     gap: spacing.md
   },
-  sectionHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.sm
-  },
   sectionTitle: {
     color: colors.woodPrimary,
     fontSize: 24,
@@ -81,20 +88,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardBackground,
     borderColor: colors.accentBlueBorder,
     borderRadius: radius.md,
-    borderWidth: 2,
+    borderWidth: 1,
     overflow: 'hidden',
     padding: spacing.lg,
     ...shadows.soft
-  },
-  aiBadge: {
-    backgroundColor: 'rgba(212, 230, 241, 0.5)',
-    borderRadius: radius.pill,
-    height: 36,
-    marginBottom: spacing.md,
-    width: 36
-  },
-  aiCardContent: {
-    gap: spacing.sm
   },
   aiCardTitle: {
     color: colors.textPrimary,
@@ -102,10 +99,11 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   aiCardDescription: {
-    color: colors.woodPrimary,
-    fontSize: 24,
+    color: colors.textSecondary,
+    fontSize: 16,
     fontWeight: '700',
-    lineHeight: 30
+    lineHeight: 22,
+    marginTop: spacing.sm
   },
   historyHeader: {
     alignItems: 'center',
