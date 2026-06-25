@@ -7,7 +7,7 @@ module.exports = [
   },
   js.configs.recommended,
   {
-    files: ['**/*.js'],
+    files: ['**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

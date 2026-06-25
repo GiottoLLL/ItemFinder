@@ -69,6 +69,7 @@ try {
   defineGlobal('CompressionStream', webStreams.CompressionStream)
   defineGlobal('DecompressionStream', webStreams.DecompressionStream)
 } catch (error) {
+  void error
 }
 
 try {
@@ -81,4 +82,5 @@ try {
     }
   }
 } catch (error) {
+  void error
 }
